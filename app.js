@@ -6,4 +6,4 @@ function cleanFileName(name){return (name||"archivo").trim().replace(/\.[^/.]+$/
 function addDownload(url,fileName,text){const d=qs("downloads");const a=document.createElement("a");a.href=url;a.download=fileName;a.textContent=text;d.appendChild(a)}
 function createPdfUrl(bytes){return URL.createObjectURL(new Blob([bytes],{type:"application/pdf"}))}
 function setLoading(btn,loading,text){btn.disabled=loading;btn.textContent=text}
-const API = "http://localhost:3000";
+const API = "https://bytoolpdf-backend.onrender.com";
