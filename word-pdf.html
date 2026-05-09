@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Word a PDF</title>
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="index.html"><div class="brand-icon">
+  <img src="assets/logo.png" alt="Logo">
+</div> ByChris</a>
+<nav class="nav">
+<a href="separar.html">Separar PDF</a>
+<a href="unir.html">Unir PDF</a>
+<a href="pdf-word.html">PDF a Word</a>
+<a href="word-pdf.html">Word a PDF</a>
+</nav>
+</header>
+
+<section class="hero"><h1>Word a PDF</h1><p>Convertí archivos DOC o DOCX a PDF.</p></section>
+<main class="container"><div class="card">
+<label class="upload" for="fileInput"><div class="upload-icon">🡹</div><h2>Seleccionar Word</h2><span>Subí tu archivo .doc o .docx</span><input type="file" id="fileInput" accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"><div class="file-name" id="fileName"></div></label>
+<button class="btn" id="runBtn" disabled data-text="Convertir Word a PDF" onclick="sendToBackend('/api/word-to-pdf','word-convertido.pdf')">Convertir Word a PDF</button>
+<div class="downloads" id="downloads"></div><div class="message" id="message"></div>
+<p class="note"></p>
+</div></main>
+
+<script src="js/app.js"></script>
+<script>
+const fileInput=qs("fileInput"),fileName=qs("fileName"),runBtn=qs("runBtn");
+let file=null;
+fileInput.onchange=()=>{clearResults();file=fileInput.files[0];if(!file){return}fileName.textContent=file.name;runBtn.disabled=false};
+async function sendToBackend(endpoint,outputName){
+  clearResults();
+  if(!file){showMessage("Seleccioná un archivo primero.","error");return}
+  try{
+    setLoading(runBtn,true,"Procesando...");
+    const fd=new FormData();
+    fd.append("file",file);
+    const res=await fetch(API+endpoint,{method:"POST",body:fd});
+    if(!res.ok){
+      const err=await res.json().catch(()=>({}));
+      throw new Error(err.error||"Error del servidor");
+    }
+    const blob=await res.blob();
+    addDownload(URL.createObjectURL(blob),outputName,"Descargar resultado");
+    showMessage("Archivo convertido correctamente.","ok");
+  }catch(e){
+    showMessage(e.message||"No se pudo procesar. Revisá que el backend esté activo.","error");
+  }finally{
+    setLoading(runBtn,false,runBtn.dataset.text);
+  }
+}
+</script>
+</body></html>

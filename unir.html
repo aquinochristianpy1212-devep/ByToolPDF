@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Unir PDF</title>
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="index.html"><div class="brand-icon">
+  <img src="assets/logo.png" alt="Logo">
+</div> ByChris</a>
+<nav class="nav">
+<a href="separar.html">Separar PDF</a>
+<a href="unir.html">Unir PDF</a>
+<a href="pdf-word.html">PDF a Word</a>
+<a href="word-pdf.html">Word a PDF</a>
+</nav>
+</header>
+
+<section class="hero"><h1>Unir PDF</h1><p>Seleccioná varios PDFs, ordenalos y descargá un solo archivo unido.</p></section>
+<main class="container"><div class="card">
+<label class="upload" for="pdfInput"><div class="upload-icon">+</div><h2>Seleccionar PDFs</h2><span>Podés seleccionar varios archivos PDF</span><input type="file" id="pdfInput" accept="application/pdf" multiple><div class="file-name" id="fileName"></div></label>
+<div id="filesList" class="file-list"></div>
+<div class="form"><div class="full"><label>Nombre final</label><input id="outputName" value="pdf-unido"></div></div>
+<button class="btn" id="mergeBtn" disabled>Unir PDF</button>
+<div class="downloads" id="downloads"></div><div class="message" id="message"></div>
+</div></main>
+<script src="js/app.js"></script>
+<script>
+const pdfInput=qs("pdfInput"),fileName=qs("fileName"),filesList=qs("filesList"),mergeBtn=qs("mergeBtn"),outputName=qs("outputName");
+let files=[];
+pdfInput.onchange=()=>{clearResults();files=Array.from(pdfInput.files).filter(f=>f.type==="application/pdf");if(!files.length){showMessage("Seleccioná PDFs válidos.","error");return}fileName.textContent=`${files.length} PDF seleccionado(s)`;renderFiles();mergeBtn.disabled=false};
+function renderFiles(){filesList.style.display="block";filesList.innerHTML="<h3>Orden de unión</h3>"+files.map((f,i)=>`<div class="file-row"><div><b>${i+1}. ${f.name}</b><div class="note" style="text-align:left;margin:4px 0 0">${(f.size/1024/1024).toFixed(2)} MB</div></div><button class="secondary" style="margin:0" onclick="moveFile(${i},-1)">Subir</button><button class="remove" onclick="removeFile(${i})">X</button></div>`).join("")}
+function moveFile(i,dir){const ni=i+dir;if(ni<0||ni>=files.length)return;[files[i],files[ni]]=[files[ni],files[i]];renderFiles()}
+function removeFile(i){files.splice(i,1);renderFiles();mergeBtn.disabled=!files.length}
+mergeBtn.onclick=async()=>{clearResults();if(!files.length)return;try{setLoading(mergeBtn,true,"Uniendo PDFs...");const out=await PDFLib.PDFDocument.create();for(const file of files){const bytes=await file.arrayBuffer();const doc=await PDFLib.PDFDocument.load(bytes);const copied=await out.copyPages(doc,doc.getPageIndices());copied.forEach(p=>out.addPage(p))}const final=await out.save();addDownload(createPdfUrl(final),cleanFileName(outputName.value||"pdf-unido")+".pdf","Descargar PDF unido");showMessage("PDFs unidos correctamente.","ok")}catch(e){console.error(e);showMessage("Error al unir PDFs.","error")}finally{setLoading(mergeBtn,false,"Unir PDF")}};
+</script>
+</body></html>
